@@ -5,6 +5,7 @@ import { FaYoutube, FaTiktok, FaTelegram } from 'react-icons/fa';
 import { IoMdArrowBack } from 'react-icons/io';
 import ConnectButtons from './components/ConnectButtons';
 import ProgressIndicator from './components/ProgressIndicator';
+import DynamicInput from './components/Input';
 
 function App() {
   const steps = [
@@ -33,7 +34,7 @@ function App() {
 
   return (
     <div className='flex items-center flex-col h-screen'>
-      <div
+      {/* <div
         className='pt-10 md:w-[500px] w-[350px] bg-cover bg-center flex flex-col items-center gap-5'
         style={{ backgroundImage: `url(${bg})` }}
       >
@@ -82,7 +83,12 @@ function App() {
       </div>
       <div className='flex justify-center items-center mt-10'>
         <ProgressIndicator currentStep={currentStep} steps={steps} />
-      </div>
+      </div> */}
+      <DynamicInput
+        firstName='John'
+        lastName='Doe'
+        challengeName='Code Challenge'
+      />
     </div>
   );
 }
