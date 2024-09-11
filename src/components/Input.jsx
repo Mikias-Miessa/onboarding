@@ -1,141 +1,96 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 
-const DynamicInput = ({ firstName, lastName, challengeName }) => {
-  const initialText = `Hello {first_name} {last_name}, you have been invited to {challenge_name}`;
+const initialTemplate = [
+  'Hello ',
+  '{first_name}',
+  ' ',
+  '{last_name}',
+  ', you are invited to ',
+  '{challenge_name}',
+];
 
-  const [content, setContent] = useState(initialText);
-  const [placeholders, setPlaceholders] = useState({
-    first_name: true,
-    last_name: true,
-    challenge_name: true,
-  });
-  const contentRef = useRef(null);
+const EmailTemplateEditor = () => {
+  const [template, setTemplate] = useState(initialTemplate);
 
-  // Preserve caret position and set it back
-  const setCaretPosition = (el, position) => {
-    const range = document.createRange();
-    const sel = window.getSelection();
-    range.setStart(el.childNodes[0], position);
-    range.collapse(true);
-    sel.removeAllRanges();
-    sel.addRange(range);
+  // Function to update non-placeholder text
+  const handleTextChange = (e, index) => {
+    const updatedTemplate = [...template];
+    updatedTemplate[index] = e.target.value;
+    setTemplate(updatedTemplate);
   };
 
-  const getCaretPosition = (el) => {
-    const selection = window.getSelection();
-    if (!selection.rangeCount) return 0;
-    const range = selection.getRangeAt(0);
-    const preCaretRange = range.cloneRange();
-    preCaretRange.selectNodeContents(el);
-    preCaretRange.setEnd(range.endContainer, range.endOffset);
-    return preCaretRange.toString().length;
+  // Add placeholder
+  const addPlaceholder = (placeholder) => {
+    setTemplate([...template, `{${placeholder}}`]);
   };
 
-  const togglePlaceholder = (placeholder) => {
-    const inputElement = contentRef.current;
-    const caretPos = getCaretPosition(inputElement); // Get caret position before making changes
-
-    const placeholderText = `{${placeholder}}`;
-    const currentContent = contentRef.current.innerText;
-
-    if (placeholders[placeholder]) {
-      // Remove the placeholder
-      setPlaceholders((prev) => ({
-        ...prev,
-        [placeholder]: false,
-      }));
-      setContent(currentContent.replace(placeholderText, ''));
-    } else {
-      // Add the placeholder at the caret position
-      const updatedContent = [
-        currentContent.slice(0, caretPos),
-        placeholderText,
-        currentContent.slice(caretPos),
-      ].join('');
-      setContent(updatedContent);
-      setPlaceholders((prev) => ({
-        ...prev,
-        [placeholder]: true,
-      }));
-      setCaretPosition(contentRef.current, caretPos + placeholderText.length); // Move the caret after the inserted placeholder
-    }
-  };
-
-  const handleInputChange = () => {
-    setContent(contentRef.current.innerText); // Update the content state after typing
-  };
-
-  const renderContent = () => {
-    const parts = content.split(/(\{[a-z_]+\})/g); // Split the content by placeholders
-
-    return parts.map((part, index) => {
-      if (part.match(/\{[a-z_]+\}/)) {
-        // If it's a placeholder
-        return (
-          <span
-            key={index}
-            contentEditable={false}
-            className='bg-gray-200 px-1 rounded cursor-pointer mx-1'
-          >
-            {part}
-          </span>
-        );
-      } else {
-        // Regular text
-        return <span key={index}>{part}</span>;
-      }
-    });
+  // Remove placeholder
+  const removePlaceholder = (index) => {
+    const updatedTemplate = template.filter((_, i) => i !== index);
+    setTemplate(updatedTemplate);
   };
 
   return (
-    <div className='p-4'>
-      <div
-        ref={contentRef}
-        className='border p-2 w-full'
-        contentEditable
-        onInput={handleInputChange}
-        suppressContentEditableWarning={true}
-      >
-        {renderContent()}
+    <div className='p-6 bg-white rounded-lg shadow-md'>
+      <h2 className='text-xl font-semibold mb-4'>Edit Email Template</h2>
+
+      {/* Render template as input and span elements */}
+      <div className='border p-4 rounded bg-gray-100'>
+        {template.map((segment, index) => {
+          // Render placeholders
+          if (segment.startsWith('{') && segment.endsWith('}')) {
+            return (
+              <span
+                key={index}
+                className='bg-gray-200 text-gray-600 rounded px-1 mx-1'
+              >
+                {segment}
+                <button
+                  onClick={() => removePlaceholder(index)}
+                  className='ml-2 text-red-500'
+                >
+                  &times;
+                </button>
+              </span>
+            );
+          }
+
+          // Render editable text
+          return (
+            <input
+              key={index}
+              type='text'
+              value={segment}
+              onChange={(e) => handleTextChange(e, index)}
+              className='border-none bg-transparent outline-none'
+            />
+          );
+        })}
       </div>
-      <div className='flex gap-2 mt-2'>
-        {/* Toggle first_name */}
-        <button
-          className={`flex items-center ${
-            placeholders.first_name ? 'bg-blue-500' : 'bg-gray-400'
-          } text-white px-3 py-1 rounded`}
-          onClick={() => togglePlaceholder('first_name')}
-        >
-          {firstName}
-          <span className='ml-2'>{placeholders.first_name ? '✕' : '➕'}</span>
-        </button>
 
-        {/* Toggle last_name */}
+      {/* Buttons to add placeholders */}
+      <div className='mt-4 space-x-2'>
         <button
-          className={`flex items-center ${
-            placeholders.last_name ? 'bg-green-500' : 'bg-gray-400'
-          } text-white px-3 py-1 rounded`}
-          onClick={() => togglePlaceholder('last_name')}
+          className='bg-blue-500 text-white py-1 px-3 rounded'
+          onClick={() => addPlaceholder('first_name')}
         >
-          {lastName}
-          <span className='ml-2'>{placeholders.last_name ? '✕' : '➕'}</span>
+          Add First Name
         </button>
-
-        {/* Toggle challenge_name */}
         <button
-          className={`flex items-center ${
-            placeholders.challenge_name ? 'bg-red-500' : 'bg-gray-400'
-          } text-white px-3 py-1 rounded`}
-          onClick={() => togglePlaceholder('challenge_name')}
+          className='bg-blue-500 text-white py-1 px-3 rounded'
+          onClick={() => addPlaceholder('last_name')}
         >
-          {challengeName}
-          <span className='ml-2'>
-            {placeholders.challenge_name ? '✕' : '➕'}
-          </span>
+          Add Last Name
+        </button>
+        <button
+          className='bg-blue-500 text-white py-1 px-3 rounded'
+          onClick={() => addPlaceholder('challenge_name')}
+        >
+          Add Challenge Name
         </button>
       </div>
     </div>
   );
 };
 
-export default DynamicInput;
+export default EmailTemplateEditor;

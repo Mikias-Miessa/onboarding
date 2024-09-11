@@ -6,6 +6,7 @@ import { IoMdArrowBack } from 'react-icons/io';
 import ConnectButtons from './components/ConnectButtons';
 import ProgressIndicator from './components/ProgressIndicator';
 import DynamicInput from './components/Input';
+import EmailTemplateEditor from './components/Input';
 
 function App() {
   const steps = [
@@ -84,11 +85,7 @@ function App() {
       <div className='flex justify-center items-center mt-10'>
         <ProgressIndicator currentStep={currentStep} steps={steps} />
       </div> */}
-      <DynamicInput
-        firstName='John'
-        lastName='Doe'
-        challengeName='Code Challenge'
-      />
+      <EmailTemplateEditor />
     </div>
   );
 }
