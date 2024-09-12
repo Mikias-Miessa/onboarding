@@ -24,7 +24,14 @@ function App() {
   ];
 
   const [currentStep, setCurrentStep] = useState(1);
-
+  const response = {
+    body: '<h3><strong>Hello </strong>{first_name} {last_name},</h3><p>You have been invited to a challenge. Please login to your account to view the challenge.</p>',
+    created_at: 'Thu, 05 Sep 2024 04:03:17 GMT',
+    id: 1,
+    name: 'individual_challenge_invitation',
+    placeholders: ['first_name', 'last_name'],
+    subject: 'You have been invited to a challenge',
+  };
   const handleContinue = () => {
     setCurrentStep((prevStep) => Math.min(prevStep + 1, steps.length));
   };
@@ -85,7 +92,10 @@ function App() {
       <div className='flex justify-center items-center mt-10'>
         <ProgressIndicator currentStep={currentStep} steps={steps} />
       </div> */}
-      <EmailTemplateEditor />
+      <EmailTemplateEditor
+        initialBody={response.body}
+        placeholders={response.placeholders}
+      />
     </div>
   );
 }

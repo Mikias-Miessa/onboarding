@@ -1,3 +1,15 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.placeholder {
+  background-color: #e2e8f0; /* Light gray background */
+  padding: 2px 4px;
+  border-radius: 4px;
+  display: inline-block;
+}
+.quill-editor {
+  height: 200px;
+  border: 1px solid #ccc;
+  padding: 10px;
+}

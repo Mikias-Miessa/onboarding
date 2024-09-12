@@ -1,93 +1,94 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
-const initialTemplate = [
-  'Hello ',
-  '{first_name}',
-  ' ',
-  '{last_name}',
-  ', you are invited to ',
-  '{challenge_name}',
-];
+const EmailTemplateEditor = ({ initialBody, placeholders }) => {
+  const [body, setBody] = useState(initialBody);
+  const editorRef = useRef(null);
 
-const EmailTemplateEditor = () => {
-  const [template, setTemplate] = useState(initialTemplate);
+  // Function to insert a placeholder at the cursor position
+  const insertPlaceholder = (placeholder) => {
+    const editor = editorRef.current;
+    const selection = window.getSelection();
+    const range = selection.getRangeAt(0);
+    const newNode = document.createElement('span');
+    newNode.className =
+      'bg-gray-200 text-blue-500 rounded px-1 mx-1 inline-flex items-center';
+    newNode.contentEditable = 'false';
+    newNode.innerHTML = `{${placeholder}} <span class="ml-1 cursor-pointer text-red-500" onClick="this.parentNode.remove();">x</span>`;
 
-  // Function to update non-placeholder text
-  const handleTextChange = (e, index) => {
-    const updatedTemplate = [...template];
-    updatedTemplate[index] = e.target.value;
-    setTemplate(updatedTemplate);
+    range.insertNode(newNode);
+    range.setStartAfter(newNode);
+    range.setEndAfter(newNode);
+    selection.removeAllRanges();
+    selection.addRange(range);
+
+    setBody(editor.innerHTML);
+    editor.focus();
   };
 
-  // Add placeholder
-  const addPlaceholder = (placeholder) => {
-    setTemplate([...template, `{${placeholder}}`]);
+  // Convert existing placeholders in the initial body to interactive elements
+  const convertPlaceholdersToInteractive = (content) => {
+    return content.replace(/\{(.*?)\}/g, (match, p1) => {
+      return `<span class='bg-gray-200 text-blue-500 rounded px-1 mx-1 inline-flex items-center' contentEditable='false'>{${p1}} <span class="ml-1 cursor-pointer text-red-500" onClick="this.parentNode.remove();">x</span></span>`;
+    });
   };
 
-  // Remove placeholder
-  const removePlaceholder = (index) => {
-    const updatedTemplate = template.filter((_, i) => i !== index);
-    setTemplate(updatedTemplate);
+  // Function to handle input changes
+  const handleInputChange = () => {
+    setBody(editorRef.current.innerHTML);
   };
+
+  // Store cursor position and restore it after re-render
+  const saveSelection = () => {
+    const selection = window.getSelection();
+    if (selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0);
+      return range;
+    }
+    return null;
+  };
+
+  const restoreSelection = (range) => {
+    if (range) {
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+    }
+  };
+
+  const handleKeyUp = () => {
+    const range = saveSelection();
+    setBody(editorRef.current.innerHTML);
+    setTimeout(() => restoreSelection(range), 0);
+  };
+
+  // Convert initial body placeholders to interactive on mount
+  useEffect(() => {
+    const editor = editorRef.current;
+    editor.innerHTML = convertPlaceholdersToInteractive(initialBody);
+    setBody(editor.innerHTML);
+  }, [initialBody]);
 
   return (
-    <div className='p-6 bg-white rounded-lg shadow-md'>
-      <h2 className='text-xl font-semibold mb-4'>Edit Email Template</h2>
+    <div>
+      <div
+        ref={editorRef}
+        contentEditable
+        onInput={handleInputChange}
+        onKeyUp={handleKeyUp}
+        className='w-full p-2 border rounded whitespace-pre-wrap'
+        style={{ minHeight: '150px' }}
+      />
 
-      {/* Render template as input and span elements */}
-      <div className='border p-4 rounded bg-gray-100'>
-        {template.map((segment, index) => {
-          // Render placeholders
-          if (segment.startsWith('{') && segment.endsWith('}')) {
-            return (
-              <span
-                key={index}
-                className='bg-gray-200 text-gray-600 rounded px-1 mx-1'
-              >
-                {segment}
-                <button
-                  onClick={() => removePlaceholder(index)}
-                  className='ml-2 text-red-500'
-                >
-                  &times;
-                </button>
-              </span>
-            );
-          }
-
-          // Render editable text
-          return (
-            <input
-              key={index}
-              type='text'
-              value={segment}
-              onChange={(e) => handleTextChange(e, index)}
-              className='border-none bg-transparent outline-none'
-            />
-          );
-        })}
-      </div>
-
-      {/* Buttons to add placeholders */}
-      <div className='mt-4 space-x-2'>
-        <button
-          className='bg-blue-500 text-white py-1 px-3 rounded'
-          onClick={() => addPlaceholder('first_name')}
-        >
-          Add First Name
-        </button>
-        <button
-          className='bg-blue-500 text-white py-1 px-3 rounded'
-          onClick={() => addPlaceholder('last_name')}
-        >
-          Add Last Name
-        </button>
-        <button
-          className='bg-blue-500 text-white py-1 px-3 rounded'
-          onClick={() => addPlaceholder('challenge_name')}
-        >
-          Add Challenge Name
-        </button>
+      <div className='mt-4'>
+        {placeholders.map((placeholder) => (
+          <button
+            key={placeholder}
+            onClick={() => insertPlaceholder(placeholder)}
+            className='mr-2 p-2 bg-blue-500 text-white rounded'
+          >
+            Add {placeholder}
+          </button>
+        ))}
       </div>
     </div>
   );
